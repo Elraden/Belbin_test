@@ -1,5 +1,3 @@
-// src/components/Instruction.jsx
-import React from 'react';
 import { Typography, Button } from '@mui/material';
 
 const Instruction = ({ onNext }) => {

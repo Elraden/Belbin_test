@@ -1,5 +1,3 @@
-// src/components/QuestionSection.jsx
-import React from 'react';
 import { Typography, Slider } from '@mui/material';
 
 const QuestionSection = ({ sectionData, answers, onAnswerChange }) => {

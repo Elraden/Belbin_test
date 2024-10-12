@@ -1,5 +1,4 @@
-// src/components/UserInfoForm.jsx
-import React from 'react';
+
 import { TextField, Button, Typography, Checkbox, FormControlLabel } from '@mui/material';
 
 const UserInfoForm = ({
