@@ -9,8 +9,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import connectToDatabase from './db.js';
 
-
-// Настраиваем __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,10 +19,11 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.post('/api/save', (req, res) => {
+app.post('/api/save', async (req, res) => {
   const data = req.body;
 
   try {
+    // Работа с файлами
     let jsonData = [];
     if (fs.existsSync('data.json')) {
       const fileData = fs.readFileSync('data.json', 'utf8');
@@ -34,7 +33,6 @@ app.post('/api/save', (req, res) => {
     }
 
     jsonData.push(data);
-
     fs.writeFileSync('data.json', JSON.stringify(jsonData, null, 2));
 
     const sections = Object.keys(data).filter(
@@ -59,15 +57,18 @@ app.post('/api/save', (req, res) => {
       csvLine.push(...answers.map((value) => (value !== undefined ? value : 0)));
     });
 
-    fs.appendFile('data.csv', csvLine.join(',') + '\n', (err) => {
-      if (err) {
-        console.error('Ошибка при записи в CSV:', err);
-        res.status(500).json({ message: 'Ошибка при записи в CSV' });
-      } else {
-        res.json({ message: 'Данные успешно сохранены' });
-      }
+    // Запись в CSV
+    await new Promise((resolve, reject) => {
+      fs.appendFile('data.csv', csvLine.join(',') + '\n', (err) => {
+        if (err) {
+          console.error('Ошибка при записи в CSV:', err);
+          return reject(new Error('Ошибка при записи в CSV'));
+        }
+        resolve();
+      });
     });
 
+    // Работа с базой данных
     if (dbClient) {
       const query = `
         INSERT INTO test_results (name, email, role, in_team, team_name, results)
@@ -82,20 +83,19 @@ app.post('/api/save', (req, res) => {
         JSON.stringify(data)
       ];
 
-      dbClient.query(query, values, (err, result) => {
-        if (err) {
-          console.error('Ошибка при сохранении данных в базу:', err);
-          res.status(500).json({ message: 'Ошибка при сохранении данных в базу' });
-        } else {
-          res.json({ message: 'Данные успешно сохранены' });
-        }
+      await new Promise((resolve, reject) => {
+        dbClient.query(query, values, (err, result) => {
+          if (err) {
+            console.error('Ошибка при записи в базу данных:', err);
+            return reject(new Error('Ошибка при записи в базу данных'));
+          }
+          resolve();
+        });
       });
-    } else {
-      // Если база данных не подключена, просто отправляем ответ
-      res.json({ message: 'Данные успешно сохранены в файлы' });
     }
 
-
+    // Только один раз отправляем ответ
+    res.json({ message: 'Данные успешно сохранены' });
 
   } catch (error) {
     console.error('Ошибка при сохранении данных:', error);
