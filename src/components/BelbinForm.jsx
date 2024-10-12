@@ -71,9 +71,12 @@ const BelbinForm = () => {
             });
         });
 
+        
+        const apiUrl = import.meta.env.VITE_API_URL;
+
         const testData = { name, email, role, inTeam, teamName, ...filledFormData };
 
-        fetch('http://localhost:5000/api/save', {
+        fetch(`${apiUrl}/api/save`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
