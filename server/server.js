@@ -2,6 +2,12 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Настраиваем __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -16,7 +22,7 @@ app.post('/api/save', (req, res) => {
     if (fs.existsSync('data.json')) {
       const fileData = fs.readFileSync('data.json', 'utf8');
       if (fileData) {
-        jsonData = JSON.parse(fileData); 
+        jsonData = JSON.parse(fileData);
       }
     }
 
@@ -24,8 +30,16 @@ app.post('/api/save', (req, res) => {
 
     fs.writeFileSync('data.json', JSON.stringify(jsonData, null, 2));
 
-    const sections = Object.keys(data).filter((key) => typeof data[key] === 'object' && key !== 'name' && key !== 'email' && key !== 'role' && key !== 'inTeam' && key !== 'teamName');
-    
+    const sections = Object.keys(data).filter(
+      (key) =>
+        typeof data[key] === 'object' &&
+        key !== 'name' &&
+        key !== 'email' &&
+        key !== 'role' &&
+        key !== 'inTeam' &&
+        key !== 'teamName'
+    );
+
     const csvLine = [
       data.name,
       data.email,
@@ -53,6 +67,13 @@ app.post('/api/save', (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log('Сервер запущен на порту 5000');
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Сервер запущен на порту ${PORT}`);
 });
