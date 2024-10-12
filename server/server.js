@@ -4,10 +4,14 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import connectToDatabase from './db.js';
+
 
 // Настраиваем __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const dbClient = connectToDatabase();
 
 const app = express();
 
@@ -60,6 +64,35 @@ app.post('/api/save', (req, res) => {
         res.json({ message: 'Данные успешно сохранены' });
       }
     });
+
+    if (dbClient) {
+      const query = `
+        INSERT INTO test_results (name, email, role, in_team, team_name, results)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `;
+      const values = [
+        data.name,
+        data.email,
+        data.role,
+        data.inTeam,
+        data.teamName || null,
+        JSON.stringify(data)
+      ];
+
+      dbClient.query(query, values, (err, result) => {
+        if (err) {
+          console.error('Ошибка при сохранении данных в базу:', err);
+          res.status(500).json({ message: 'Ошибка при сохранении данных в базу' });
+        } else {
+          res.json({ message: 'Данные успешно сохранены' });
+        }
+      });
+    } else {
+      // Если база данных не подключена, просто отправляем ответ
+      res.json({ message: 'Данные успешно сохранены в файлы' });
+    }
+
+
 
   } catch (error) {
     console.error('Ошибка при сохранении данных:', error);
