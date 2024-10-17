@@ -1,13 +1,15 @@
 import dotenv from 'dotenv';
-dotenv.config();
-
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import connectToDatabase from './db.js';
+import { writeToCsv } from './csvWriter.js';
+import { writeToJson } from './jsonWriter.js';
+import { writeToDatabase } from './dbWriter.js';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,87 +18,38 @@ const dbClient = connectToDatabase();
 
 const app = express();
 
+console.log("Сервер запускается...");
+
+if (dbClient) {
+  console.log("Подключение к базе данных успешно");
+} else {
+  console.log("Не удалось подключиться к базе данных");
+}
+
 app.use(cors());
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+  console.log(`${req.method} запрос на ${req.url}`);
+  next();
+});
+
 app.post('/api/save', async (req, res) => {
   const data = req.body;
+  // console.log("POST запрос на /api/save", data);
 
   try {
-    // Работа с файлами
-    let jsonData = [];
-    if (fs.existsSync('data.json')) {
-      const fileData = fs.readFileSync('data.json', 'utf8');
-      if (fileData) {
-        jsonData = JSON.parse(fileData);
-      }
-    }
+    
+    console.log("Попытка записи в JSON...");
+    writeToJson(data);
 
-    jsonData.push(data);
-    fs.writeFileSync('data.json', JSON.stringify(jsonData, null, 2));
+    // console.log("Попытка записи в CSV...");
+    // await writeToCsv(data);
 
-    const sections = Object.keys(data).filter(
-      (key) =>
-        typeof data[key] === 'object' &&
-        key !== 'name' &&
-        key !== 'email' &&
-        key !== 'role' &&
-        key !== 'inTeam' &&
-        key !== 'teamName'
-    );
+    console.log("Попытка записи в базу данных...");
+    await writeToDatabase(dbClient, data);
 
-    const csvLine = [
-      data.name,
-      data.email,
-      data.role,
-      data.inTeam ? data.teamName : ''
-    ];
-
-    sections.forEach((section) => {
-      const answers = Object.values(data[section]);
-      csvLine.push(...answers.map((value) => (value !== undefined ? value : 0)));
-    });
-
-    // Запись в CSV
-    await new Promise((resolve, reject) => {
-      fs.appendFile('data.csv', csvLine.join(',') + '\n', (err) => {
-        if (err) {
-          console.error('Ошибка при записи в CSV:', err);
-          return reject(new Error('Ошибка при записи в CSV'));
-        }
-        resolve();
-      });
-    });
-
-    // Работа с базой данных
-    if (dbClient) {
-      const query = `
-        INSERT INTO test_results (name, email, role, in_team, team_name, results)
-        VALUES ($1, $2, $3, $4, $5, $6)
-      `;
-      const values = [
-        data.name,
-        data.email,
-        data.role,
-        data.inTeam,
-        data.teamName || null,
-        JSON.stringify(data)
-      ];
-
-      await new Promise((resolve, reject) => {
-        dbClient.query(query, values, (err, result) => {
-          if (err) {
-            console.error('Ошибка при записи в базу данных:', err);
-            return reject(new Error('Ошибка при записи в базу данных'));
-          }
-          resolve();
-        });
-      });
-    }
-
-    // Только один раз отправляем ответ
     res.json({ message: 'Данные успешно сохранены' });
-
   } catch (error) {
     console.error('Ошибка при сохранении данных:', error);
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
@@ -106,6 +59,7 @@ app.post('/api/save', async (req, res) => {
 app.use(express.static(path.join(__dirname, '../dist')));
 
 app.get('*', (req, res) => {
+  console.log("GET запрос на *");
   res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
 
