@@ -8,7 +8,7 @@ export const writeToDatabase = async (dbClient, data) => {
     const values = [
       data.name,
       data.email,
-      data.role,
+      data.specialty,
       data.inTeam,
       data.teamName || null,
       JSON.stringify(data.results),  

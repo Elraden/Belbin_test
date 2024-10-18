@@ -15,15 +15,15 @@ const BelbinForm = () => {
     const [isInstructionShown, setIsInstructionShown] = useState(false);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [role, setRole] = useState('');
+    const [specialty, setSpecialty] = useState('');
     const [teamName, setTeamName] = useState('');
     const [inTeam, setInTeam] = useState(false);
-    const [results, setResults] = useState([]); 
-    // const [interpretation, setInterpretation] = useState([]); 
+    const [results, setResults] = useState([]);
     const [nameError, setNameError] = useState('');
     const [emailError, setEmailError] = useState('');
-    const [roleError, setRoleError] = useState('');
+    const [specialtyError, setSpecialtyError] = useState('');
     const [error, setError] = useState('');
+    const [totalPoints, setTotalPoints] = useState(0); 
 
     const sections = Object.keys(belbinQuestions);
     const currentSection = belbinQuestions[sections[currentSectionIndex]];
@@ -47,12 +47,12 @@ const BelbinForm = () => {
         return true;
     };
 
-    const validateRole = () => {
-        if (!role.trim()) {
-            setRoleError('Роль не может быть пустой');
+    const validateSpecialty = () => {
+        if (!specialty.trim()) {
+            setSpecialtyError('Специальность не может быть пустой');
             return false;
         }
-        setRoleError('');
+        setSpecialtyError('');
         return true;
     };
 
@@ -101,7 +101,7 @@ const BelbinForm = () => {
         }));
 
         const apiUrl = import.meta.env.VITE_API_URL;
-        const testData = { name, email, role, inTeam, teamName, results: filledFormData, interpretation: interpretationJson };
+        const testData = { name, email, specialty, inTeam, teamName, results: filledFormData, interpretation: interpretationJson };
 
         console.log(testData);
 
@@ -127,13 +127,29 @@ const BelbinForm = () => {
         } else {
             setError('');
             setCurrentSectionIndex(currentSectionIndex + 1);
+            setTotalPoints(0);
         }
     };
 
     const handleUserInfoNext = () => {
-        if (validateName() && validateEmail() && validateRole()) {
+        if (validateName() && validateEmail() && validateSpecialty()) {
             setIsInfoFilled(true);
         }
+    };
+
+
+    const handleAnswerChange = (index, value) => {
+        const updatedAnswers = {
+            ...formData,
+            [sections[currentSectionIndex]]: {
+                ...formData[sections[currentSectionIndex]],
+                [index]: value,
+            },
+        };
+        setFormData(updatedAnswers);
+
+        const total = Object.values(updatedAnswers[sections[currentSectionIndex]] || {}).reduce((sum, val) => sum + val, 0);
+        setTotalPoints(total);
     };
 
     if (isTestComplete) {
@@ -146,7 +162,7 @@ const BelbinForm = () => {
                 <UserInfoForm
                     name={name}
                     email={email}
-                    role={role}
+                    specialty={specialty}
                     teamName={teamName}
                     inTeam={inTeam}
                     onNameChange={(e) => setName(e.target.value)}
@@ -154,12 +170,12 @@ const BelbinForm = () => {
                         setEmail(e.target.value);
                         validateEmail();
                     }}
-                    onRoleChange={(e) => setRole(e.target.value)}
+                    onSpecialtyChange={(e) => setSpecialty(e.target.value)}
                     onTeamChange={(e) => setTeamName(e.target.value)}
                     onInTeamChange={(e) => setInTeam(e.target.checked)}
                     nameError={nameError}
                     emailError={emailError}
-                    roleError={roleError}
+                    specialtyError={specialtyError}
                     onNext={handleUserInfoNext}
                 />
             </Container>
@@ -180,17 +196,9 @@ const BelbinForm = () => {
             <QuestionSection
                 sectionData={currentSection}
                 answers={formData[sections[currentSectionIndex]] || {}}
-                onAnswerChange={(index, value) => {
-                    const updatedAnswers = {
-                        ...formData,
-                        [sections[currentSectionIndex]]: {
-                            ...formData[sections[currentSectionIndex]],
-                            [index]: value,
-                        },
-                    };
-                    setFormData(updatedAnswers);
-                }}
+                onAnswerChange={handleAnswerChange}
             />
+            <Typography variant="h6">Сумма баллов за этот раздел: {totalPoints}</Typography> 
             {error && <Typography color="error">{error}</Typography>}
             <div>
                 {currentSectionIndex > 0 && (
@@ -214,3 +222,4 @@ const BelbinForm = () => {
 };
 
 export default BelbinForm;
+

@@ -1,20 +1,20 @@
 
-import { TextField, Button, Typography, Checkbox, FormControlLabel } from '@mui/material';
-
+import { TextField, Button, Typography, Checkbox, FormControlLabel, MenuItem } from '@mui/material';
+import specialties from '../specialties.json'; 
 const UserInfoForm = ({
   name,
   email,
-  role,
+  specialty, 
   teamName,
   inTeam,
   onNameChange,
   onEmailChange,
-  onRoleChange,
+  onSpecialtyChange, 
   onTeamChange,
   onInTeamChange,
   nameError,
   emailError,
-  roleError,
+  specialtyError, 
   onNext,
 }) => {
   return (
@@ -39,14 +39,21 @@ const UserInfoForm = ({
         helperText={emailError}
       />
       <TextField
-        label="Ваша роль"
+        select
+        label="Специальность" 
         fullWidth
         margin="normal"
-        value={role}
-        onChange={onRoleChange}
-        error={!!roleError}
-        helperText={roleError}
-      />
+        value={specialty}
+        onChange={onSpecialtyChange}
+        error={!!specialtyError}
+        helperText={specialtyError}
+      >
+        {specialties.map((spec, index) => (
+          <MenuItem key={index} value={spec}>
+            {spec}
+          </MenuItem>
+        ))}
+      </TextField>
       <FormControlLabel
         control={<Checkbox checked={inTeam} onChange={onInTeamChange} />}
         label="Состою в команде"
@@ -64,7 +71,7 @@ const UserInfoForm = ({
         variant="contained"
         color="primary"
         onClick={onNext}
-        disabled={!!nameError || !!emailError || !name || !email || !!roleError || !role}
+        disabled={!!nameError || !!emailError || !name || !email || !!specialtyError || !specialty}
       >
         Начать тест
       </Button>
@@ -73,3 +80,4 @@ const UserInfoForm = ({
 };
 
 export default UserInfoForm;
+
