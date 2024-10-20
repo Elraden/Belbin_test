@@ -15,46 +15,25 @@ const BelbinForm = () => {
     const [isInstructionShown, setIsInstructionShown] = useState(false);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [specialty, setSpecialty] = useState('');
+    const [role, setRole] = useState('');
     const [teamName, setTeamName] = useState('');
     const [inTeam, setInTeam] = useState(false);
     const [results, setResults] = useState([]);
-    const [nameError, setNameError] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const [specialtyError, setSpecialtyError] = useState('');
     const [error, setError] = useState('');
-    const [totalPoints, setTotalPoints] = useState(0); 
+    const [totalPoints, setTotalPoints] = useState(0);
 
     const sections = Object.keys(belbinQuestions);
     const currentSection = belbinQuestions[sections[currentSectionIndex]];
 
-    const validateName = () => {
-        if (!name.trim()) {
-            setNameError('Имя не может быть пустым');
-            return false;
-        }
-        setNameError('');
-        return true;
+    const onEmailChange = (value) => {
+        setEmail(value); 
     };
 
-    const validateEmail = () => {
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!regex.test(email)) {
-            setEmailError('Введите корректный email');
-            return false;
-        }
-        setEmailError('');
-        return true;
+    const onRoleChange = (value) => {
+        setRole(value); 
     };
 
-    const validateSpecialty = () => {
-        if (!specialty.trim()) {
-            setSpecialtyError('Специальность не может быть пустой');
-            return false;
-        }
-        setSpecialtyError('');
-        return true;
-    };
+
 
     const handleSubmit = () => {
         const total = Object.values(formData[sections[currentSectionIndex]] || {}).reduce((sum, val) => sum + val, 0);
@@ -101,7 +80,8 @@ const BelbinForm = () => {
         }));
 
         const apiUrl = import.meta.env.VITE_API_URL;
-        const testData = { name, email, specialty, inTeam, teamName, results: filledFormData, interpretation: interpretationJson };
+        const testData = { name, email, role, inTeam, teamName, results: filledFormData, interpretation: interpretationJson };
+
 
         console.log(testData);
 
@@ -132,11 +112,8 @@ const BelbinForm = () => {
     };
 
     const handleUserInfoNext = () => {
-        if (validateName() && validateEmail() && validateSpecialty()) {
-            setIsInfoFilled(true);
-        }
+        setIsInfoFilled(true);
     };
-
 
     const handleAnswerChange = (index, value) => {
         const updatedAnswers = {
@@ -162,20 +139,14 @@ const BelbinForm = () => {
                 <UserInfoForm
                     name={name}
                     email={email}
-                    specialty={specialty}
+                    role={role}
                     teamName={teamName}
                     inTeam={inTeam}
                     onNameChange={(e) => setName(e.target.value)}
-                    onEmailChange={(e) => {
-                        setEmail(e.target.value);
-                        validateEmail();
-                    }}
-                    onSpecialtyChange={(e) => setSpecialty(e.target.value)}
+                    onEmailChange={onEmailChange} 
+                    onRoleChange={onRoleChange} 
                     onTeamChange={(e) => setTeamName(e.target.value)}
                     onInTeamChange={(e) => setInTeam(e.target.checked)}
-                    nameError={nameError}
-                    emailError={emailError}
-                    specialtyError={specialtyError}
                     onNext={handleUserInfoNext}
                 />
             </Container>
@@ -198,7 +169,7 @@ const BelbinForm = () => {
                 answers={formData[sections[currentSectionIndex]] || {}}
                 onAnswerChange={handleAnswerChange}
             />
-            <Typography variant="h6">Сумма баллов за этот раздел: {totalPoints}</Typography> 
+            <Typography variant="h6">Сумма баллов за этот раздел: {totalPoints}</Typography>
             {error && <Typography color="error">{error}</Typography>}
             <div>
                 {currentSectionIndex > 0 && (
@@ -222,4 +193,3 @@ const BelbinForm = () => {
 };
 
 export default BelbinForm;
-

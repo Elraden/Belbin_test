@@ -1,25 +1,47 @@
+import { TextField, Button, Typography, Checkbox, FormControlLabel, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { useState } from 'react';
+import { validateEmail, validateName, validateRole } from '../utils/validators';
+import roles from '../roles.json';
 
-import { TextField, Button, Typography, Checkbox, FormControlLabel, MenuItem } from '@mui/material';
-import specialties from '../specialties.json'; 
 const UserInfoForm = ({
   name,
   email,
-  specialty, 
+  role,
   teamName,
   inTeam,
   onNameChange,
   onEmailChange,
-  onSpecialtyChange, 
+  onRoleChange,
   onTeamChange,
   onInTeamChange,
-  nameError,
-  emailError,
-  specialtyError, 
   onNext,
 }) => {
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [roleError, setRoleError] = useState('');
+
+  const handleValidation = () => {
+    const nameErr = validateName(name);
+    const emailErr = validateEmail(email);
+    const roleErr = validateRole(role);
+
+    setNameError(nameErr);
+    setEmailError(emailErr);
+    setRoleError(roleErr);
+
+    return !nameErr && !emailErr && !roleErr;
+  };
+
+  const handleNext = () => {
+    if (handleValidation()) {
+      onNext();
+    }
+  };
+
   return (
-    <div>
+    <div style={{ width: "60%" }}>
       <Typography variant="h4">Введите информацию для начала теста</Typography>
+
       <TextField
         label="ФИО"
         fullWidth
@@ -34,26 +56,32 @@ const UserInfoForm = ({
         fullWidth
         margin="normal"
         value={email}
-        onChange={onEmailChange}
+        onChange={(e) => {
+          onEmailChange(e.target.value);
+          setEmailError(validateEmail(e.target.value));
+        }}
         error={!!emailError}
         helperText={emailError}
       />
-      <TextField
-        select
-        label="Специальность" 
-        fullWidth
-        margin="normal"
-        value={specialty}
-        onChange={onSpecialtyChange}
-        error={!!specialtyError}
-        helperText={specialtyError}
-      >
-        {specialties.map((spec, index) => (
-          <MenuItem key={index} value={spec}>
-            {spec}
-          </MenuItem>
-        ))}
-      </TextField>
+
+      <FormControl fullWidth margin="normal" style={{ width: '100%' }} error={!!roleError}>
+        <InputLabel>Специальность</InputLabel>
+        <Select
+          value={role || ''}
+          onChange={(e) => {
+            onRoleChange(e.target.value);
+            setRoleError(validateRole(e.target.value));
+          }}
+        >
+          {roles.map((roleOption, index) => (
+            <MenuItem key={index} value={roleOption}>
+              {roleOption}
+            </MenuItem>
+          ))}
+        </Select>
+        {roleError && <Typography color="error">{roleError}</Typography>}
+      </FormControl>
+
       <FormControlLabel
         control={<Checkbox checked={inTeam} onChange={onInTeamChange} />}
         label="Состою в команде"
@@ -70,8 +98,8 @@ const UserInfoForm = ({
       <Button
         variant="contained"
         color="primary"
-        onClick={onNext}
-        disabled={!!nameError || !!emailError || !name || !email || !!specialtyError || !specialty}
+        onClick={handleNext}
+        disabled={!name || !email || !role || !!nameError || !!emailError || !!roleError}
       >
         Начать тест
       </Button>
@@ -80,4 +108,3 @@ const UserInfoForm = ({
 };
 
 export default UserInfoForm;
-

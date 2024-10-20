@@ -1,18 +1,20 @@
 export const writeToDatabase = async (dbClient, data) => {
     const query = `
-      INSERT INTO test_results (name, email, role, in_team, team_name, results, interpretation)
+      INSERT INTO test_results (name, email, role, in_team, team_name, results, interpretation, test_date)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
     `;
 
-    
+    const currentDate = new Date();
+
     const values = [
       data.name,
       data.email,
-      data.specialty,
+      data.role,
       data.inTeam,
       data.teamName || null,
       JSON.stringify(data.results),  
-      JSON.stringify(data.interpretation) 
+      JSON.stringify(data.interpretation),
+      currentDate
     ];
   
     return new Promise((resolve, reject) => {
