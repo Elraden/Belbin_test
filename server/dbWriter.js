@@ -1,7 +1,7 @@
 export const writeToDatabase = async (dbClient, data) => {
     const query = `
       INSERT INTO test_results (name, email, role, in_team, team_name, results, interpretation, test_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `;
 
     const currentDate = new Date();
