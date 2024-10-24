@@ -39,7 +39,7 @@ const UserInfoForm = ({
   };
 
   return (
-    <div style={{ width: "60%" }}>
+    <div style={{ width: "100%" }}>
       <Typography variant="h4">Введите информацию для начала теста</Typography>
 
       <TextField
